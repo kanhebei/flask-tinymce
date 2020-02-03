@@ -12,20 +12,22 @@ VERSION_TINYMCE = '5.1.1'
 
 class _TinyMce(object):
     @staticmethod
-    def config(selector='#body', **kwargs):
+    def config(selector='#body',**kwargs):
         plugins = kwargs.get('plugins', current_app.config['TINYMCE_PLUGINS'])
         tool_bar = kwargs.get('tool_bar', current_app.config['TINYMCE_TOOLBAR'])
+        language = kwargs.get('language', current_app.config['TINYMCE_LANGUAGE'])
         return Markup('''
 <script type="text/javascript">
     tinymce.init({
             convert_urls: false,
+            language: "%s",
             selector: "%s",
             height: 280,
             menubar: false,
             toolbar: "%s",
             plugins: "%s".split(",")
         });
-</script>''' % (selector, ' '.join(tool_bar), ','.join(plugins)))
+</script>''' % (language, selector, ' '.join(tool_bar), ','.join(plugins)))
 
     @staticmethod
     def load(version=VERSION_TINYMCE):
@@ -68,6 +70,7 @@ class Tinymce(object):
         app.jinja_env.globals['tinymce'] = self
         # default settings
         app.config.setdefault('TINYMCE_SERVE_LOCAL', False)
+        app.config.setdefault('TINYMCE_LANGUAGE', 'zh_CN')
         app.config.setdefault(
             'TINYMCE_TOOLBAR',
             [
