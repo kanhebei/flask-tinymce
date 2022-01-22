@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<body>
+    <h3>Tinymce Simple Examples</h3>
+    <form>
+        <textarea id="content" name="content"></textarea>
+    </form>
+    {{ tinymce.load_js() }}
+    {{ tinymce.init("#content", plugins='image code',toolbar="undo redo | link image | code") }}
+</body>
+</html>

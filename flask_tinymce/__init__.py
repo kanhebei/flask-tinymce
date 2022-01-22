@@ -1,56 +1,49 @@
-"""
-    Flask-TinyMce
-    @Time    : 2020/2/1 11:29
-    @Author  : wumao
-    @Email   : kanhebei@dingtalk.com
-"""
 from flask import Blueprint, current_app, url_for, Markup
+import json
+
+__VERSION__ = '1.0.0'
+__AUTHOR__ = 'wumao'
+__EMAIL__ = 'kanhebei@dingtalk.com'
+
+class TinyMCEHelper:
+    def init(self, selector, **kwargs):
+        kwargs['selector'] = selector
+                       
+        if all(
+            (
+                'language' not in kwargs,
+                'language' not in current_app.config['TINYMCE_CONFIG'],
+                current_app.config['TINYMCE_LANGUAGE']
+            )
+        ):
+            kwargs['language'] = current_app.config['TINYMCE_LANGUAGE']
+
+        for k, v in current_app.config['TINYMCE_CONFIG'].items():
+            if k not in kwargs:
+                kwargs[k] = v
 
 
-VERSION_TINYMCE = '5.1.1'
+        js = '<script type="text/javascript">tinymce.init(%s)</script>'
+        return Markup(js % json.dumps(kwargs))
 
+    def load_js(self, src=None):
+        if src is not None:
+            return Markup('<script src="%s"></script>' % src)
 
-class _TinyMce(object):
-    @staticmethod
-    def config(selector='#body',**kwargs):
-        plugins = kwargs.get('plugins', current_app.config['TINYMCE_PLUGINS'])
-        tool_bar = kwargs.get('tool_bar', current_app.config['TINYMCE_TOOLBAR'])
-        language = kwargs.get('language', current_app.config['TINYMCE_LANGUAGE'])
-        return Markup('''
-<script type="text/javascript">
-    tinymce.init({
-            convert_urls: false,
-            language: "%s",
-            selector: "%s",
-            height: 280,
-            menubar: false,
-            toolbar: "%s",
-            plugins: "%s".split(",")
-        });
-</script>''' % (language, selector, ' '.join(tool_bar), ','.join(plugins)))
+        if current_app.config['TINYMCE_SERVE_LOCAL'] is True:
+            return Markup('<script src="%s"></script>' % url_for('tinymce.static', filename='tinymce.min.js'))
 
-    @staticmethod
-    def load(version=VERSION_TINYMCE):
-        serve_local = current_app.config['TINYMCE_SERVE_LOCAL']
-        js_filename = 'tinymce.min.js'
-        if serve_local:
-            js = '<script src="{}"></script>'.format(url_for('tinymce.static', filename=js_filename))
-        else:
-            js = '<script src="https://cdn.jsdelivr.net/npm/tinymce@{}/{}"></script>'.format(version, js_filename)
-
-        return Markup(js)
-
-    @staticmethod
-    def create(class_='form-control', name='', value=''):
-        return Markup('<textarea class="{0}" id="{1}" name="{1}">{2}</textarea>'.format(
-            class_,
-            name,
-            value
+        return Markup('<script src="{src}" referrerpolicy="origin"></script>'.format(
+            'https://cdn.tiny.cloud/1/%s/tinymce/5/tinymce.min.js' % current_app.config['TINYMCE_API_TOKEN']
         ))
 
 
-class Tinymce(object):
-    def __init__(self, app=None):
+class TinyMCE:
+    def __init__(self, app=None, helper=TinyMCEHelper):
+        self.app = app
+
+        self.helper = helper() 
+
         if app is not None:
             self.init_app(app)
 
@@ -60,31 +53,17 @@ class Tinymce(object):
             __name__,
             template_folder='templates',
             static_folder='static',
-            static_url_path='/tinymce' + app.static_url_path
+            static_url_path='/tinymce'
         )
         app.register_blueprint(blueprint)
         if not hasattr(app, 'extensions'):
             app.extensions = {}
-        app.extensions['tinymce'] = _TinyMce()
-        app.context_processor(self.context_processor)
-        app.jinja_env.globals['tinymce'] = self
-        # default settings
-        app.config.setdefault('TINYMCE_SERVE_LOCAL', False)
+        app.extensions['tinymce'] = self.helper
+        app.context_processor(lambda : {'tinymce': self.helper})
+        
+        # 使用扩展自带的资源
+        app.config.setdefault('TINYMCE_SERVE_LOCAL', True)
+        # 非本地资源 填写tinymce 的API_TOKEN
+        app.config.setdefault('TINYMCE_API_TOKEN', 'no-api-key')
         app.config.setdefault('TINYMCE_LANGUAGE', 'zh_CN')
-        app.config.setdefault(
-            'TINYMCE_TOOLBAR',
-            [
-                'format', 'undo', 'redo', 'searchreplace', 'bold', 'italic', 'underline',
-                'alignleft', 'aligncenter', 'aligncenter', 'alignright', 'outdent',
-                'indent', 'image', 'wordcount', 'preview', 'fullscreen'
-            ]
-        )
-        app.config.setdefault(
-            'TINYMCE_PLUGINS',
-            ["preview", "fullscreen", "wordcount", "image", "searchreplace"]
-        )
-
-    @staticmethod
-    def context_processor():
-        return {'tinymce': current_app.extensions['tinymce']}
-
+        app.config.setdefault('TINYMCE_CONFIG', {})

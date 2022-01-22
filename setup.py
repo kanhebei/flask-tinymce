@@ -1,43 +1,45 @@
-"""
-    Flask-TinyMce
-    @Time    : 2020/2/1 11:29
-    @Author  : wumao
-    @Email   : kanhebei@dingtalk.com
+import re
+import os
+import sys
 
-    pip install Flask_TinyMce
-
-    from flask_tinymce import TinyMce
-
-
-    tiny_mce = Tinymce(app)
-
-    or
-
-    tiny_mce = Tinymce()
-    tiny_mce.init_app(app)
-
-
-
-"""
 from setuptools import setup
 
 
+def fpath(name):
+    return os.path.join(os.path.dirname(__file__), name)
+
+def read(fname):
+    return open(fpath(fname)).read()
+
+def desc():
+    info = read('README.md')
+    try:
+        return info + '\n\n' + read('doc/changelog.rst')
+    except IOError:
+        return info
+
+file_text = read(fpath('flask_tinymce/__init__.py'))
+
+def grep(attrname):
+    pattern = r"{0}\W*=\W*'([^']+)'".format(attrname)
+    strval, = re.findall(pattern, file_text)
+    return strval
+
 setup(
-    name='Flask-TinyMce',
-    version='0.1.4',
+    name='Flask-TinyMCE',
+    version=grep('__VERSION__'),
     url='https://github.com/kanhebei/flask-tinymce',
     license='MIT',
-    author='WuMao',
-    author_email='kanhebei@dingtalk.com',
-    description='flask tinymce',
-    long_description=__doc__,
+    author=grep('__AUTHOR__'),
+    author_email=grep('__EMAIL__'),
+    description='Flask-TinyMCE',
+    long_description=desc(),
     packages=['flask_tinymce'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
     install_requires=[
         'Flask',
-        'WTForms'
     ],
     classifiers=[
         'Environment :: Web Environment',
