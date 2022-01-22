@@ -1,6 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Flask-TinyMCE
+--------------
+TinyMCE integration for Flask
+Features:
+* 1
+* 2
+* 3
+* 4
+* 5
+* 6
+"""
+
 import re
 import os
-import sys
 
 from setuptools import setup
 
@@ -9,14 +22,7 @@ def fpath(name):
     return os.path.join(os.path.dirname(__file__), name)
 
 def read(fname):
-    return open(fpath(fname)).read()
-
-def desc():
-    info = read('README.md')
-    try:
-        return info + '\n\n' + read('doc/changelog.rst')
-    except IOError:
-        return info
+    return open(fpath(fname), encoding='utf-8').read()
 
 file_text = read(fpath('flask_tinymce/__init__.py'))
 
@@ -33,7 +39,7 @@ setup(
     author=grep('__AUTHOR__'),
     author_email=grep('__EMAIL__'),
     description='Flask-TinyMCE',
-    long_description=desc(),
+    long_description=__doc__,
     packages=['flask_tinymce'],
     zip_safe=False,
     include_package_data=True,

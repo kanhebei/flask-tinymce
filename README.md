@@ -1,8 +1,5 @@
-# Flask-TinyMce
-[Flask]https://flask.palletsprojects.com/en/2.0.x/ 整合 [TinyMCE](https://www.tiny.cloud).的富文本编辑器扩展
+[Flask](https://flask.palletsprojects.com/en/2.0.x/) 整合 [TinyMCE](https://www.tiny.cloud).的富文本编辑器扩展
 
-
-## 如何开始：
 
 from flask_tinymce import TinyMce
 
